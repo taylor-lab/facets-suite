@@ -25,14 +25,20 @@ parser$add_argument('-o', '--output-prefix', required = TRUE,
                     help = 'Name prefix for output file')
 parser$add_argument('-p', '--pseudo-snps', required = FALSE, default = 50,
                     help = 'Do pileup at every p:th position [default %(default)s]')
-parser$add_argument('-d', '--max-depth', required = FALSE, default = 4000,
+parser$add_argument('-d', '--max-depth', required = FALSE, default = 20000,
                     help = 'Maximum read depth [default %(default)s]')
+parser$add_argument('-q', '--min_map_quality', required = FALSE, default = 0,
+                    help = 'Sets the minimum threshold for mapping quality')
+parser$add_argument('-Q', '--min_base_quality', required = FALSE, default = 0,
+                    help = 'Sets the minimum threshold for base quality.')
+parser$add_argument('-un', '--unmatched_normal_BAMS', required = FALSE, default = FALSE,
+                    help = 'full path(s) to unmatched normal BAMs to use for log ratio normalization, e.g. /dmp/data/mskdata/heme/production/*-NS_*bam')
 
 args = parser$parse_args()
 
 # Prepare output --------------------------------------------------------------------------------------------------
 
-snp_pileup_env = Sys.getenv('SNP_PILEUP')
+snp_pileup_env = Sys.which("snp-pileup")
 
 if (is.null(args$snp_pileup_path)) {
     if (snp_pileup_env == '') {
@@ -51,15 +57,30 @@ if (file.exists(output_file)) {
 
 default_args = c('--count-orphans --gzip')
 
+#enforce minmum read count of 10 for all normals analyzed
+if (args$unmatched_normal_BAMS!=FALSE){
+  unmatched_bam_count = length(system(paste("ls ", args$unmatched_normal_BAMS), intern=TRUE))
+  min_read_counts = c(" --min-read-counts 10,0", rep(",10", unmatched_bam_count))
+  message("incorporating ", unmatched_bam_count, " unmatched bams into analysis")
+} else{
+  min_read_counts = " --min-read-counts 10,0"
+}
 pileup_cmd = paste(
     snp_pileup_path,
     default_args,
     '-P', args$pseudo_snps,
     '-d', args$max_depth,
     args$vcf_file,
+    '-q', args$min_map_quality,
+    '-Q', args$min_base_quality,
+    #'-r', min_read_counts,
     output_file,
     args$normal_bam,
-    args$tumor_bam
-    )
+    args$tumor_bam,
+    args$unmatched_normal_BAMS
+)
 
+pileup_cmd = c(pileup_cmd, min_read_counts)
+
+message("pileup cmd: ", pileup_cmd)
 system(pileup_cmd)

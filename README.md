@@ -54,6 +54,7 @@ Most use of this package can be done from the command line using three wrapper s
         --normal-bam normal.bam \
         --tumor-bam tumor.bam \
         --output-prefix <prefix for output file, preferrably tumorSample__normalSample>
+        --unmatched_normal_BAMS <full path to unmatched BAMs for logR normalization>
     ```
     The input VCF file should contain polymorphic SNPs, so that FACETS can infer changes in allelic configuration at genomic loci from changes in allele ratios. [dbSNP](https://www.ncbi.nlm.nih.gov/snp/) is a good source for this. By default, `snp-pileup` also estimates the read depth in the input BAM files every 50th base.
 

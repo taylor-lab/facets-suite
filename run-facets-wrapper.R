@@ -7,7 +7,6 @@ suppressPackageStartupMessages({
     library(egg)
     library(purrr)
     library(tibble)
-    #library(pctGCdata)
 })
 
 args = commandArgs(TRUE)
@@ -215,10 +214,6 @@ if (dir.exists(directory)) {
 
 # Read SNP counts file
 message(paste('Reading', args$counts_file))
-#if (args$facets2n_lib_path != '' & args$MandUnormal==TRUE){
-#    read_counts = facets2n::readSnpMatrix(args$counts_file, MandUnormal = args$MandUnormal, ReferencePileupFile = args$reference_snp_pileup, ReferenceLoessFile = args$reference_loess_file, useMatchedX = args$useMatchedX)
-#}else if(args$facets2n_lib_path != ''){
-#    read_counts = facets2n::readSnpMatrix(args$counts_file, MandUnormal = args$MandUnormal)
 if(args$facets2n_lib_path != ''){
     read_counts = read_snp_matrix_facets2n(args$counts_file,MandUnormal= args$MandUnormal, ReferencePileupFile=args$reference_snp_pileup, ReferenceLoessFile=args$reference_loess_file, useMatchedX=args$useMatchedX)
 }else{

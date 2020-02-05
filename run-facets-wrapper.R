@@ -7,6 +7,7 @@ suppressPackageStartupMessages({
     library(egg)
     library(purrr)
     library(tibble)
+    #library(pctGCdata)
 })
 
 args = commandArgs(TRUE)
@@ -33,23 +34,33 @@ parser$add_argument('-g', '--genome', required = FALSE,
 parser$add_argument('-c', '--cval', required = FALSE, type = 'integer',
                     default = 50, help = 'Segmentation parameter (cval) [default %(default)s]')
 parser$add_argument('-pc', '--purity-cval', required = FALSE, type = 'integer',
-                    default = 100, help = 'If two pass, purity segmentation parameter (cval)')
+                    default = 150, help = 'If two pass, purity segmentation parameter (cval)')
 parser$add_argument('-m', '--min-nhet', required = FALSE, type = 'integer',
                     default = 15, help = 'Min. number of heterozygous SNPs required for clustering [default %(default)s]')
 parser$add_argument('-pm', '--purity-min-nhet', required = FALSE, type = 'integer',
-                    default = 15, help = 'If two pass, purity min. number of heterozygous SNPs (cval) [default %(default)s]')
+                    default = 10, help = 'If two pass, purity min. number of heterozygous SNPs (cval) [default %(default)s]')
 parser$add_argument('-n', '--snp-window-size', required = FALSE, type = 'integer', 
                     default = 250, help = 'Window size for heterozygous SNPs [default %(default)s]')
 parser$add_argument('-nd', '--normal-depth', required = FALSE, type = 'integer',
-                    default = 35, help = 'Min. depth in normal to keep SNPs [default %(default)s]')
+                    default = 25, help = 'Min. depth in normal to keep SNPs [default %(default)s]')
 parser$add_argument('-d', '--dipLogR', required = FALSE, type = 'double',
                     default = NULL, help = 'Manual dipLogR')
 parser$add_argument('-S', '--seed', required = FALSE, type = 'integer',
                     default = 100, help = 'Manual seed value [default %(default)s]')
-parser$add_argument('-l', '--legacy-output', required = FALSE, type = 'logical',
-                    default = FALSE, help = 'create legacy output files (.RData and .cncf.txt) [default %(default)s]')
+parser$add_argument('-l', '--legacy-output', required = FALSE, action="store_true",
+                    default = FALSE, help = 'create legacy output files (.RData and .cncf.txt)')
 parser$add_argument('-fl', '--facets-lib-path', required = FALSE,
-                    default = '', help = 'path to the facets library. if none provided, uses version available to `library(facets)`')
+                    default = '', help = 'path to the facets library. must supply either --facets-lib-path or --facets2n-lib-path')
+parser$add_argument('-f2l', '--facets2n-lib-path', required = FALSE,
+                    default = '', help = 'path to the facets2n library. must supply either --facets-lib-path or --facets2n-lib-path')
+parser$add_argument('-refc', '--reference-snp-pileup', required = FALSE,
+                    default = NULL, help = 'A snp-pileup generated pileup data frame (of reference normals) with sample columns that match with the ReferenceLoess object.')
+parser$add_argument('-refl', '--reference-loess-file', required = FALSE,
+                    default = NULL, help = ' A ReferenceLoess matrix with a header and span values in the first row.')
+parser$add_argument('-MandU', '--MandUnormal', required = FALSE, action="store_true",
+                    default = FALSE, help = 'facets2n option: Is CNLR analysis to be peformed using unmatched reference normals?')
+parser$add_argument('-x', '--useMatchedX', required = FALSE, action="store_true",
+                    default = FALSE, help = 'facets2n option: Force matched normal to be used for ChrX normalization')
 
 args = parser$parse_args()
 
@@ -167,7 +178,12 @@ facets_iteration = function(name_prefix, ...) {
                         min_nhet = params$min_nhet,
                         genome = params$genome,
                         seed = params$seed,
-                        facets_lib_path = params$facets_lib_path)
+                        facets_lib_path = params$facets_lib_path, 
+                        facets2n_lib_path = params$facets2n_lib_path, 
+                        referencePileup= params$reference-snp-pileup, 
+                        referenceLoess = params$reference-loess-file, 
+                        MandUnormal = params$MandUnormal, 
+                        useMatchedX = params$useMatchedX)
     
     # No need to print the segmentation
     # print_segments(outfile = paste0(name_prefix, '.cncf.txt'), 
@@ -199,7 +215,15 @@ if (dir.exists(directory)) {
 
 # Read SNP counts file
 message(paste('Reading', args$counts_file))
-read_counts = read_snp_matrix(args$counts_file)
+#if (args$facets2n_lib_path != '' & args$MandUnormal==TRUE){
+#    read_counts = facets2n::readSnpMatrix(args$counts_file, MandUnormal = args$MandUnormal, ReferencePileupFile = args$reference_snp_pileup, ReferenceLoessFile = args$reference_loess_file, useMatchedX = args$useMatchedX)
+#}else if(args$facets2n_lib_path != ''){
+#    read_counts = facets2n::readSnpMatrix(args$counts_file, MandUnormal = args$MandUnormal)
+if(args$facets2n_lib_path != ''){
+    read_counts = read_snp_matrix_facets2n(args$counts_file,MandUnormal= args$MandUnormal, ReferencePileupFile=args$reference_snp_pileup, ReferenceLoessFile=args$reference_loess_file, useMatchedX=args$useMatchedX)
+}else{
+    read_counts = read_snp_matrix(args$counts_file)
+}
 message(paste('Writing to', directory))
 
 # Determine if running two-pass
@@ -213,7 +237,13 @@ if (!is.null(args$purity_cval)) {
                                      min_nhet = args$purity_min_nhet,
                                      genome = args$genome,
                                      seed = args$seed,
-                                     facets_lib_path = args$facets_lib_path)
+                                     facets_lib_path = args$facets_lib_path, 
+                                     facets2n_lib_path = args$facets2n_lib_path, 
+                                     referencePileup= args$reference_snp_pileup, 
+                                     referenceLoess = args$reference_loess_file, 
+                                     MandUnormal = args$MandUnormal, 
+                                     useMatchedX = args$useMatchedX
+                                     )
 
     hisens_output = facets_iteration(name_prefix = paste0(name, '_hisens'),
                                      dipLogR = purity_output$dipLogR,
@@ -223,7 +253,12 @@ if (!is.null(args$purity_cval)) {
                                      min_nhet = args$min_nhet,
                                      genome = args$genome,
                                      seed = args$seed,
-                                     facets_lib_path = args$facets_lib_path)
+                                     facets_lib_path = args$facets_lib_path, 
+                                     facets2n_lib_path = args$facets2n_lib_path, 
+                                     referencePileup= args$reference_snp_pileup, 
+                                     referenceLoess = args$reference_loess_file, 
+                                     MandUnormal = args$MandUnormal, 
+                                     useMatchedX = args$useMatchedX)
     
     metadata = NULL
     if (args$everything) {

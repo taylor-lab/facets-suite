@@ -12,7 +12,12 @@ facetsSuite is an R package with functions to run [FACETS](https://github.com/ms
 You can install facetsSuite in R from this repository with:
 
 ``` r
-devtools::install_github("mskcc/facets-suite", ref = "Rpackagev2")
+devtools::install_github("taylor-lab/facets-suite", ref = "feature/facets2N")
+```
+
+FACETS2N (https://github.com/rptashkin/facets2n) can be installed as:
+``` r
+devtools::install_github("rptashkin/facets2n", ref= "master")
 ```
 
 Also follow the [instructions for installing FACETS](https://github.com/mskcc/facets).
@@ -54,7 +59,7 @@ Most use of this package can be done from the command line using three wrapper s
         --normal-bam normal.bam \
         --tumor-bam tumor.bam \
         --output-prefix <prefix for output file, preferrably tumorSample__normalSample>
-        --unmatched_normal_BAMS <full path to unmatched BAMs for logR normalization>
+        --unmatched-normal-BAMS <full path to unmatched BAMs for logR normalization>
     ```
     The input VCF file should contain polymorphic SNPs, so that FACETS can infer changes in allelic configuration at genomic loci from changes in allele ratios. [dbSNP](https://www.ncbi.nlm.nih.gov/snp/) is a good source for this. By default, `snp-pileup` also estimates the read depth in the input BAM files every 50th base.
 

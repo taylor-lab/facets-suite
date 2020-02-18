@@ -10,6 +10,12 @@
 #' @param min_nhet Minimum number of heterozygous SNPs on segment required for clustering, see `facets` help.
 #' @param genome Genome build.
 #' @param seed Seed value for random number generation, set to enable full reproducibility.
+#' @param facets_lib_path path to facets R library
+#' @param facets2n_lib_path path to facets2n R library
+#' @param referencePileup  facets2n option: Filepath to an optional snp-pileup generated pileup data of one or more reference normals.
+#' @param referenceLoess facets2n option: Filepath to an optional loess data, generated using the facets2n package, of one or more reference normals. The number of normals in this data should match that in the ReferencePileupFile, and should be in the same order.
+#' @param MandUnormal (logical) facets2n option: Is CNLR analysis to be peformed using unmatched reference normals?
+#' @param useMatchedX (logical) facets2n option: Force matched normal to be used for ChrX normalization?
 #'
 #' @return A list object containing the following items. See \href{www.github.com/mskcc/facets}{FACETS documentation} for more details:
 #' \itemize{
@@ -31,41 +37,69 @@
 #' }
 #' 
 #' @import facets
-#' @import pctGCdata
+# @import pctGCdata
+#' @importFrom pctGCdata getGCpct
+#' @import facets2n
 
 #' @export run_facets
 run_facets = function(read_counts,
                       cval = 100,
                       dipLogR = NULL,
-                      ndepth = 35,
+                      ndepth = 25,
                       snp_nbhd = 250,
-                      min_nhet = 15,
+                      min_nhet = 10,
                       genome = c('hg18', 'hg19', 'hg38', 'mm9', 'mm10'),
                       seed = 100,
-                      facets_lib_path = '') {
+                      facets_lib_path = '',
+                      facets2n_lib_path = '',
+                      MandUnormal = FALSE,
+                      useMatchedX = FALSE,
+                      referencePileup=NULL,
+                      referenceLoess=NULL) {
     
-    if ( facets_lib_path != '' ) {
+    if (facets_lib_path == '' & facets2n_lib_path == ''){
+      stop('path to facets library is missing, must supply path to either facets or facets2n',  call. = FALSE)
+    }
+    if (facets2n_lib_path != ''){
+      library(facets2n, lib.loc = facets2n_lib_path)
+      print(paste0('loaded facets2n version: ', packageVersion('facets2n')))
+    }else{
         library(facets, lib.loc = facets_lib_path)
-    } else {
-        library(facets) 
+        print(paste0('loaded facets version: ', packageVersion('facets')))
+        # Check input 
+        missing_cols = setdiff(c('Chromosome', 'Position', 'NOR.DP', 'TUM.DP', 'NOR.RD', 'TUM.RD'), names(read_counts)) 
+        if (length(missing_cols) > 0) {
+          stop(paste0('Input missing column(s)', paste(missing_cols, collapse = ', '), '.'), call. = FALSE)
+        }
+        
     }
-    print(paste0('loaded facets version: ', packageVersion('facets')))
-    
-    # Check input 
-    missing_cols = setdiff(c('Chromosome', 'Position', 'NOR.DP', 'TUM.DP', 'NOR.RD', 'TUM.RD'), names(read_counts)) 
-    if (length(missing_cols) > 0) {
-        stop(paste0('Input missing column(s)', paste(missing_cols, collapse = ', '), '.'), call. = FALSE)
-    }
-    
+   
     set.seed(seed)
     genome = match.arg(genome)
 
     # Run FACETS algorithm
-    dat = facets::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
-                                gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 1000)
-    out = facets::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
-    fit = facets::emcncf(out)
-    
+    dat =  NULL
+    out = NULL
+    fit = NULL
+    if (facets2n_lib_path != ''){
+      if (MandUnormal){
+        dat = facets2n::preProcSample(read_counts$rcmat, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
+                                  gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000, 
+                                  spanT = read_counts$spanT, spanA = read_counts$spanA, spanX = read_counts$spanX, MandUnormal = MandUnormal)
+      }else{
+        dat = facets2n::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
+                                gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000)
+      }
+      out = facets2n::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
+      fit = facets::emcncf(out, min.nhet = min_nhet)
+      
+    }else{
+      dat = facets::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
+                                  gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000)
+      out = facets::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
+      fit = facets::emcncf(out)
+    }
+  
     # Fix bad NAs
     fit$cncf = cbind(fit$cncf, cf = out$out$cf, tcn = out$out$tcn, lcn = out$out$lcn)
     fit$cncf$lcn[fit$cncf$tcn == 1] = 0

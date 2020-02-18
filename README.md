@@ -72,9 +72,9 @@ Most use of this package can be done from the command line using three wrapper s
         --sample-id tumorID__normalID \
         --purity-cval 150 --cval 50 \
         --everything \
-	--purity-min-nhet 10 \
-	--legacy-output \
-	--facets2n-lib-path <R lib path where facets2n installed>
+        --purity-min-nhet 10 \
+        --legacy-output \
+        --facets2n-lib-path <R lib path where facets2n installed>
     ```
     The above command runs FACETS in the two-pass mode, first at cval 150, then at cval 50 based on the sample-specific baseline found at the higher cval. The full suite of analysis and QC is run with the `--everything` flag. If no output directory is specified, a directory named `sample-id` is created.
 

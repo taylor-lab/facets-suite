@@ -40,7 +40,7 @@ args = parser$parse_args()
 
 snp_pileup_env = Sys.which("snp-pileup")
 
-if (is.null(args$snp_pileup_path)) {
+if (!is.null(args$snp_pileup_path)) {
     if (snp_pileup_env == '') {
         stop(paste('No snp-pileup path provided or in user environment.'), call. = F)
     } else {

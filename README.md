@@ -75,7 +75,7 @@ Most use of this package can be done from the command line using three wrapper s
         --purity-min-nhet 10 \
         --legacy-output \
         --facets2n-lib-path (optional) <R lib path where facets2n installed> \
-        --facets-lib-path (optional) <R lib path where facets installed>
+        --facets-lib-path (optional) <R lib path where facets installed> \
         --reference-snp-pileup (optional) <path to snp-pileup generated counts file for reference normals> \
         --reference-loess-file (optional) <path to facets2n generated loess file for reference normals>
     ```

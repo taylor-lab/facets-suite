@@ -70,10 +70,13 @@ Most use of this package can be done from the command line using three wrapper s
     run-facets-wrapper.R \
         --counts-file tumor_normal.snp_pileup.gz \
         --sample-id tumorID__normalID \
-        --purity-cval 1000 --cval 500 \
-        --everything
+        --purity-cval 150 --cval 50 \
+        --everything \
+	--purity-min-nhet 10 \
+	--legacy-output \
+	--facets2n-lib-path <R lib path where facets2n installed>
     ```
-    The above command runs FACETS in the two-pass mode, first at cval 1000, then at cval 500 based on the sample-specific baseline found at the higher cval. The full suite of analysis and QC is run with the `--everything` flag. If no output directory is specified, a directory named `sample-id` is created.
+    The above command runs FACETS in the two-pass mode, first at cval 150, then at cval 50 based on the sample-specific baseline found at the higher cval. The full suite of analysis and QC is run with the `--everything` flag. If no output directory is specified, a directory named `sample-id` is created.
 
 - `annotate-maf-wrapper.R`:\
     This script estimates the cancer-cell fractions (CCFs) of somatic mutations using purity and ploidy estimates from FACETS. It requires a input MAF file and a mapping of sample names in the MAF file (column `Tumor_Sample_Barcode`) to FACETS output RDS files (i.e. file paths). Alternatively, it can be run in a single-sample mode by pointing direct to the RDS and providing a MAF file with only mutation calls for the given sample.\

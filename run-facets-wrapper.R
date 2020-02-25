@@ -35,7 +35,7 @@ parser$add_argument('-c', '--cval', required = FALSE, type = 'integer',
 parser$add_argument('-pc', '--purity-cval', required = FALSE, type = 'integer',
                     default = 150, help = 'If two pass, purity segmentation parameter (cval)')
 parser$add_argument('-m', '--min-nhet', required = FALSE, type = 'integer',
-                    default = 15, help = 'Min. number of heterozygous SNPs required for clustering [default %(default)s]')
+                    default = 10, help = 'Min. number of heterozygous SNPs required for clustering [default %(default)s]')
 parser$add_argument('-pm', '--purity-min-nhet', required = FALSE, type = 'integer',
                     default = 10, help = 'If two pass, purity min. number of heterozygous SNPs (cval) [default %(default)s]')
 parser$add_argument('-n', '--snp-window-size', required = FALSE, type = 'integer', 

@@ -37,7 +37,6 @@
 #' }
 #' 
 #' @import facets
-# @import pctGCdata
 #' @importFrom pctGCdata getGCpct
 #' @import facets2n
 

@@ -65,8 +65,8 @@ cnlr_plot = function(facets_data,
     
     ymin = floor(min(segs$cnlr.median, na.rm = T))
     ymax = ceiling(max(segs$cnlr.median, na.rm = T))
-    if (ymin > -3) ymin = -3
-    if (ymax < 3) ymax = 3
+    if (ymin > -2) ymin = -2
+    if (ymax < 2) ymax = 2
     
     if (adjust_dipLogR) {
         snps$cnlr = snps$cnlr - dipLogR
@@ -315,7 +315,7 @@ icn_plot = function(facets_data,
         geom_segment(col = 'red', size = 1, 
                      aes(x = my_lcn_starts$chr_maploc, xend = my_lcn_ends$chr_maploc, 
                          y = my_lcn_starts$lcn, yend = my_lcn_ends$lcn)) +
-        geom_segment(col = 'black', size = 1, 
+        geom_segment(col = 'black', size = 0.8, 
                      aes(x = my_tcn_starts$chr_maploc, xend = my_tcn_ends$chr_maploc, 
                          y = my_tcn_starts$tcn, yend = my_tcn_ends$tcn)) +
         # scale_y_continuous(breaks=c(0:5, 5 + seq_len(35) / 3), labels = 0:40, limits = c(0, NA)) +

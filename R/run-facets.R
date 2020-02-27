@@ -90,7 +90,7 @@ run_facets = function(read_counts,
                                 gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000)
       }
       out = facets2n::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
-      fit = facets::emcncf(out, min.nhet = min_nhet)
+      fit = facets2n::emcncf(out, min.nhet = min_nhet)
       
     }else{
       dat = facets::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
@@ -222,4 +222,23 @@ create_legacy_output <- function(facets_output, directory, sample_id, counts_fil
     out_txt = paste0(out_txt, '# ', run$flags,'\n\n')   
   
     cat(out_txt, file=paste0(directory, '/', sample_id, '.out'))
+    
+    #try default facets2n plotting, continue if no facets2n lib
+    tryCatch({
+      outfile = paste0(output_prefix, "_legacy.tiff")
+      plot_title = paste0(basename(output_prefix),
+                          ' | cval=', cval,
+                          ' | purity_cval=', purity_cval,
+                          ' | purity=', round(fit$purity, 2),
+                          ' | ploidy=', round(fit$ploidy, 2),
+                          ' | dipLogR=', round(fit$dipLogR, 2))
+      message(plot_title)
+      tiff(file = outfile, width = 6, height = 8, res = 300,units = 'in')
+      facets2n::plotSample(x = out, emfit = fit, plot.type = "both", sname = plot_title)
+      dev.off()
+    },
+    error= function(cond) {message(cond); return(NA)},
+    warning=function(cond) {message(cond); return(NA)}, 
+    finally = NULL
+    )
 }

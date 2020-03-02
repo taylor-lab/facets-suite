@@ -223,4 +223,22 @@ create_legacy_output <- function(facets_output, directory, sample_id, counts_fil
   
     cat(out_txt, file=paste0(directory, '/', sample_id, '.out'))
     
+    #try default facets2n plotting, continue if no facets2n lib
+    tryCatch({
+      outfile = paste0(output_prefix, "_legacy.tiff")
+      plot_title = paste0(basename(output_prefix),
+                          ' | cval=', cval,
+                          ' | purity_cval=', purity_cval,
+                          ' | purity=', round(fit$purity, 2),
+                          ' | ploidy=', round(fit$ploidy, 2),
+                          ' | dipLogR=', round(fit$dipLogR, 2))
+      message(plot_title)
+      tiff(file = outfile, width = 6.5, height = 8, res = 300,units = 'in')
+      facets2n::plotSample(x = out, emfit = fit, plot.type = "both", sname = plot_title)
+      dev.off()
+    },
+    error= function(cond) {message(cond); return(NA)},
+    warning=function(cond) {message(cond); return(NA)},
+    finally = NULL
+    )
 }

@@ -125,16 +125,16 @@ print_plots = function(outfile,
                         ' | ploidy=', round(facets_output$ploidy, 2),
                         ' | dipLogR=', round(facets_output$dipLogR, 2))
     
-    png(file = outfile, width = 850, height = 999, units = 'px', type = 'cairo-png', res = 96)
+    png(file = outfile, width = 6, height = 8, units = 'in', type = 'cairo-png', res = 96)
     suppressWarnings(
         egg::ggarrange(
             plots = list(
-                cnlr_plot(facets_output),
-                valor_plot(facets_output),
-                icn_plot(facets_output, method = 'em'),
-                cf_plot(facets_output, method = 'em'),
-                icn_plot(facets_output, method = 'cncf'),
-                cf_plot(facets_output, method = 'cncf')
+                cnlr_plot(facets_output,plotX = TRUE),
+                valor_plot(facets_output, plotX=TRUE),
+                icn_plot(facets_output, method = 'em',plotX = TRUE),
+                cf_plot(facets_output, method = 'em', plotX = TRUE),
+                icn_plot(facets_output, method = 'cncf', plotX = TRUE),
+                cf_plot(facets_output, method = 'cncf', plotX = TRUE)
             ),
             ncol = 1,
             nrow = 6,

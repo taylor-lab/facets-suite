@@ -125,7 +125,7 @@ print_plots = function(outfile,
                         ' | ploidy=', round(facets_output$ploidy, 2),
                         ' | dipLogR=', round(facets_output$dipLogR, 2))
     
-    png(file = outfile, width = 6, height = 8, units = 'in', type = 'cairo-png', res = 96)
+    png(file = outfile, width = 6.5, height = 8, units = 'in', type = 'cairo-png', res = 300)
     suppressWarnings(
         egg::ggarrange(
             plots = list(

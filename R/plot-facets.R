@@ -243,6 +243,9 @@ cf_plot = function(facets_data,
     my_starts = snps[starts, 'chr_maploc']
     my_ends = snps[ends, 'chr_maploc']
     
+    my_starts = snps[starts, 'chr_maploc']
+    my_ends = snps[ends, 'chr_maploc']
+    
     cf = ggplot(segs) +
         geom_rect(aes(xmin = my_starts, xmax = my_ends, ymax = 1, ymin = 0),
                   fill = cols, col = 'white', size = 0) +
@@ -279,8 +282,8 @@ icn_plot = function(facets_data,
     genome = match.arg(genome, c('hg19', 'hg18', 'hg38'), several.ok = FALSE)
     method = match.arg(method, c('em', 'cncf'), several.ok = FALSE)
     
-    snps = facets_data$snps
-    segs = facets_data$segs
+    snps = facets_data$snps %>% data.table
+    segs = facets_data$segs %>% data.table
     if (!plotX) {
         snps = subset(snps, chrom < 23)
         segs = subset(segs, chrom < 23)
@@ -312,6 +315,9 @@ icn_plot = function(facets_data,
     my_tcn_ends = snps[ends, c('chr_maploc', 'tcn')]
     my_lcn_starts = snps[starts, c('chr_maploc', 'lcn')]
     my_lcn_ends = snps[ends, c('chr_maploc', 'lcn')]
+
+    axis_breaks = c(0:5, 5 + (sort(unique(segs[tcn >5, tcn])) - 5)/3)
+    axis_labels = c(0:5, sort(unique(segs[tcn >5, tcn])))
     
     icn = ggplot(segs) +
         geom_segment(col = 'red', size = 1, 
@@ -321,6 +327,7 @@ icn_plot = function(facets_data,
                      aes(x = my_tcn_starts$chr_maploc, xend = my_tcn_ends$chr_maploc, 
                          y = my_tcn_starts$tcn, yend = my_tcn_ends$tcn)) +
         # scale_y_continuous(breaks=c(0:5, 5 + seq_len(35) / 3), labels = 0:40, limits = c(0, NA)) +
+        scale_y_continuous(breaks=axis_breaks, labels=axis_labels) + 
         scale_x_continuous(breaks = mid, labels = names(mid), expand = c(.01, 0)) +
         labs(x = NULL, y = my_ylab) +
         theme_bw() +
@@ -332,16 +339,6 @@ icn_plot = function(facets_data,
               panel.grid.minor.y = element_blank(),
               plot.margin = unit(c(0, 1, 0, 0), 'lines'))
 
-    max_tcn = max(segs$tcn, na.rm = T)
-    if (max_tcn > 10) {
-        top = 5*round(43/5)
-        icn = icn + 
-            scale_y_continuous(breaks = c(0:10, seq(15, 45, 5)), labels = c(0:10, seq(15, 45, 5)), limits = c(0, max_tcn))
-    } else {
-        icn = icn + 
-            scale_y_continuous(breaks = 0:max_tcn, labels = 0:max_tcn, limits = c(0, max_tcn))
-    }
-    
     if (!is.null(highlight_gene)) {
         if (is.character(highlight_gene)) {
             highlight_gene = get_gene_position(gene_pos)

@@ -75,6 +75,7 @@ if (!is.null(args$sample_mapping)) {
 
 # Annotate --------------------------------------------------------------------------------------------------------
 annotate_sample = function(sample_id) {
+    message(paste0('Annotating:', sample_id))
     sample_maf = maf[maf$Tumor_Sample_Barcode == sample_id,]
     facets_seg_file = sample_map$file[which(sample_map$sample == sample_id)]
     if ( grepl(".cncf(.edited)?.txt", facets_seg_file)) {
@@ -104,9 +105,9 @@ output_maf = rbindlist(output_maf)
 
 # Add back samples that were missing in sample map
 if (any(!maf$Tumor_Sample_Barcode %in% sample_map$sample)) {
-    output_maf = rbindlist(output_maf,
-                           maf[!which(maf$Tumor_Sample_Barcode %in% sample_map$sample), ],
-                           use.names = TRUE, fill = TRUE)
+    missing_maf = maf[!which(maf$Tumor_Sample_Barcode %in% sample_map$sample), ]
+    l = list(output_maf, missing_maf)
+    output_maf = rbindlist(l, use.names = TRUE, fill = TRUE)
 }
 
 write.table(output_maf, output, quote = F, sep = '\t', col.names = T, row.names = F)

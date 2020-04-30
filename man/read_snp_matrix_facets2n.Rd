@@ -20,7 +20,8 @@ read_snp_matrix_facets2n(
   ReferencePileupFile = NULL,
   ReferenceLoessFile = NULL,
   MinOverlap = 0.9,
-  useMatchedX = FALSE
+  useMatchedX = FALSE,
+  refX = FALSE
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ read_snp_matrix_facets2n(
 \item{MinOverlap}{(numeric) Mininum overlap fraction of loci between a tumor pileup and reference pileup data.}
 
 \item{useMatchedX}{(logical) Is the matched normal to be used for ChrX normalization?}
+
+\item{refX}{(logical) Use sex matched reference normal for chrX normalization}
 
 \item{skip}{(character) Skip n number of lines in the input file.}
 }

@@ -48,6 +48,8 @@ parser$add_argument('-S', '--seed', required = FALSE, type = 'integer',
                     default = 100, help = 'Manual seed value [default %(default)s]')
 parser$add_argument('-l', '--legacy-output', required = FALSE, action="store_true",
                     default = FALSE, help = 'create legacy output files (.RData and .cncf.txt)')
+parser$add_argument('-rx', '--refX', required = FALSE, action="store_true",
+                    default = FALSE, help = 'use sex matched reference normal for chrX normalization')
 parser$add_argument('-fl', '--facets-lib-path', required = FALSE,
                     default = '', help = 'path to the facets library. must supply either --facets-lib-path or --facets2n-lib-path')
 parser$add_argument('-f2l', '--facets2n-lib-path', required = FALSE,
@@ -215,7 +217,7 @@ if (dir.exists(directory)) {
 # Read SNP counts file
 message(paste('Reading', args$counts_file))
 if(args$facets2n_lib_path != ''){
-    read_counts = read_snp_matrix_facets2n(args$counts_file,MandUnormal= args$MandUnormal, ReferencePileupFile=args$reference_snp_pileup, ReferenceLoessFile=args$reference_loess_file, useMatchedX=args$useMatchedX)
+    read_counts = read_snp_matrix_facets2n(args$counts_file,MandUnormal= args$MandUnormal, ReferencePileupFile=args$reference_snp_pileup, ReferenceLoessFile=args$reference_loess_file, useMatchedX=args$useMatchedX, refX=args$refX)
 }else{
     read_counts = read_snp_matrix(args$counts_file)
 }

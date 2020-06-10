@@ -1,1 +1,1 @@
-# REPO DEPRACATED. MOVED TO: https://github.com/mskcc/facets-suite
+# REPO DEPRECATED. MOVED TO: https://github.com/mskcc/facets-suite

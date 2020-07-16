@@ -15,8 +15,8 @@
 #' @param referencePileup  facets2n option: Filepath to an optional snp-pileup generated pileup data of one or more reference normals.
 #' @param referenceLoess facets2n option: Filepath to an optional loess data, generated using the facets2n package, of one or more reference normals. The number of normals in this data should match that in the ReferencePileupFile, and should be in the same order.
 #' @param MandUnormal (logical) facets2n option: Is CNLR analysis to be peformed using unmatched reference normals?
+#' @param unmatched (logical) facets2n option: unmatched, use tumor for determination of heterzygous SNPs
 #' @param useMatchedX (logical) facets2n option: Force matched normal to be used for ChrX normalization?
-#'
 #' @return A list object containing the following items. See \href{www.github.com/mskcc/facets}{FACETS documentation} for more details:
 #' \itemize{
 #'       \item{\code{snps}:} {SNPs used for copy-number segmentation, \code{het==1} for heterozygous loci.}
@@ -35,7 +35,7 @@
 #' library(pctGCdata)
 #' run_facets(test_read_counts, cval = 500, genome = 'hg38')
 #' }
-#' 
+#'
 #' @import facets
 #' @importFrom pctGCdata getGCpct
 #' @import facets2n
@@ -54,8 +54,9 @@ run_facets = function(read_counts,
                       MandUnormal = FALSE,
                       useMatchedX = FALSE,
                       referencePileup=NULL,
-                      referenceLoess=NULL) {
-    
+                      referenceLoess=NULL,
+                      unmatched = FALSE) {
+
     if (facets_lib_path == '' & facets2n_lib_path == ''){
       stop('path to facets library is missing, must supply path to either facets or facets2n',  call. = FALSE)
     }
@@ -65,14 +66,14 @@ run_facets = function(read_counts,
     }else{
         library(facets, lib.loc = facets_lib_path)
         print(paste0('loaded facets version: ', packageVersion('facets')))
-        # Check input 
-        missing_cols = setdiff(c('Chromosome', 'Position', 'NOR.DP', 'TUM.DP', 'NOR.RD', 'TUM.RD'), names(read_counts)) 
+        # Check input
+        missing_cols = setdiff(c('Chromosome', 'Position', 'NOR.DP', 'TUM.DP', 'NOR.RD', 'TUM.RD'), names(read_counts))
         if (length(missing_cols) > 0) {
           stop(paste0('Input missing column(s)', paste(missing_cols, collapse = ', '), '.'), call. = FALSE)
         }
-        
+
     }
-   
+
     set.seed(seed)
     genome = match.arg(genome)
 
@@ -82,12 +83,23 @@ run_facets = function(read_counts,
     fit = NULL
     if (facets2n_lib_path != ''){
       if (MandUnormal){
-        dat = facets2n::preProcSample(read_counts$rcmat, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
-                                  gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000, 
-                                  spanT = read_counts$spanT, spanA = read_counts$spanA, spanX = read_counts$spanX, MandUnormal = MandUnormal)
+        if (unmatched){
+          dat = facets2n::preProcSample(read_counts$rcmat, ndepth = ndepth, het.thresh = 0.3, snp.nbhd = snp_nbhd, cval = 25,
+                                        gbuild = genome, hetscale = TRUE, unmatched = TRUE, ndepthmax = 5000,
+                                        spanT = read_counts$spanT, spanA = read_counts$spanA, spanX = read_counts$spanX, MandUnormal = MandUnormal)
+        }else{
+          dat = facets2n::preProcSample(read_counts$rcmat, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
+                                        gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000,
+                                        spanT = read_counts$spanT, spanA = read_counts$spanA, spanX = read_counts$spanX, MandUnormal = MandUnormal)
+        }
       }else{
-        dat = facets2n::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
-                                gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000)
+        if (unmatched){
+          dat = facets2n::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.3, snp.nbhd = snp_nbhd, cval = 25,
+                                        gbuild = genome, hetscale = TRUE, unmatched = TRUE, ndepthmax = 5000)
+        }else{
+          dat = facets2n::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
+                           gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000)
+        }
       }
       out = facets2n::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
       fit = facets2n::emcncf(out, min.nhet = min_nhet)
@@ -98,12 +110,13 @@ run_facets = function(read_counts,
       out = facets::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
       fit = facets::emcncf(out)
     }
-  
+    
+
     # Fix bad NAs
     fit$cncf = cbind(fit$cncf, cf = out$out$cf, tcn = out$out$tcn, lcn = out$out$lcn)
     fit$cncf$lcn[fit$cncf$tcn == 1] = 0
     fit$cncf$lcn.em[fit$cncf$tcn.em == 1] = 0
-    
+
     # Generate output
     list(
         snps = out$jointseg,
@@ -142,26 +155,26 @@ load_facets_output <- function(rds_rdata_file) {
 
 #' @export create_legacy_output
 create_legacy_output <- function(facets_output, directory, sample_id, counts_file, sel_run_type, run_details) {
-    
+
     sample_id = ifelse(sel_run_type == '', sample_id, paste0(sample_id, '_', sel_run_type))
     output_prefix = paste0(directory, '/', sample_id)
-    
+
     ### create cncf.txt
     facets_output$segs %>%
         mutate(ID=sample_id,
                loc.start = start,
                loc.end = end) %>%
-        select(ID, chrom, loc.start, loc.end, seg, num.mark, nhet, cnlr.median, mafR, 
-               segclust, cnlr.median.clust, mafR.clust, cf, tcn, lcn, 
+        select(ID, chrom, loc.start, loc.end, seg, num.mark, nhet, cnlr.median, mafR,
+               segclust, cnlr.median.clust, mafR.clust, cf, tcn, lcn,
                cf.em, tcn.em, lcn.em) %>%
         write.table(file=paste0(output_prefix, '.cncf.txt'), quote=F, row.names=F, sep='\t')
-    
+
     ### create .Rdata
     out =
         list(
             jointseg = facets_output$snps,
-            out = facets_output$segs %>% 
-                select(chrom, seg, num.mark, nhet, cnlr.median, mafR, 
+            out = facets_output$segs %>%
+                select(chrom, seg, num.mark, nhet, cnlr.median, mafR,
                        segclust, cnlr.median.clust, mafR.clust, cf, tcn, lcn),
             nX=23,
             chromlevels = c(1:22, "X"),
@@ -169,7 +182,7 @@ create_legacy_output <- function(facets_output, directory, sample_id, counts_fil
             alBalLogR = facets_output$alBalLogR,
             IGV = NULL
         )
-    fit = 
+    fit =
         list(
             loglik = facets_output$loglik,
             purity = facets_output$purity,
@@ -180,11 +193,11 @@ create_legacy_output <- function(facets_output, directory, sample_id, counts_fil
             emflags = facets_output$em_flags
         )
     save(out, fit, file=paste0(output_prefix, ".Rdata"), compress=T)
-    
+
     ### create .CNCF.png
     system(paste0('mv ', output_prefix, '.png ', output_prefix, '.CNCF.png'))
-    
-    #### create .out file 
+
+    #### create .out file
     purity_cval = cval = NA
     if(nrow(run_details) == 2) {
         cval        = (run_details %>% filter(run_type == 'hisens'))$cval[1]
@@ -193,7 +206,7 @@ create_legacy_output <- function(facets_output, directory, sample_id, counts_fil
         cval   = run_details$cval[1]
         purity = run_details$purity[1]
     }
-    
+
     run = run_details %>% filter(run_type == sel_run_type) %>% head(n=1)
 
     out_txt = "# INPUT PARAMETERS GIVEN\n"
@@ -209,7 +222,7 @@ create_legacy_output <- function(facets_output, directory, sample_id, counts_fil
     out_txt = paste0(out_txt, '# min.nhet = ', run$min_nhet,'\n')
     out_txt = paste0(out_txt, '# genome = hg19\n')
     out_txt = paste0(out_txt, '# tumor_id = \n')
-    
+
     out_txt = paste0(out_txt, '\n# LOADED MODULE INFO\n')
     out_txt = paste0(out_txt, '# Facets version = ', as.character(packageVersion('facets')) , '\n\n')
     out_txt = paste0(out_txt, '\n# FACETS OUTPUT\n')
@@ -219,10 +232,10 @@ create_legacy_output <- function(facets_output, directory, sample_id, counts_fil
     out_txt = paste0(out_txt, '# dipt = -1\n')
     out_txt = paste0(out_txt, '# loglik = \n')
     out_txt = paste0(out_txt, '# output flags\n')
-    out_txt = paste0(out_txt, '# ', run$flags,'\n\n')   
-  
+    out_txt = paste0(out_txt, '# ', run$flags,'\n\n')
+
     cat(out_txt, file=paste0(directory, '/', sample_id, '.out'))
-    
+
     #try default facets2n plotting, continue if no facets2n lib
     tryCatch({
       outfile = paste0(output_prefix, "_legacy.tiff")

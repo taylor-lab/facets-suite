@@ -36,9 +36,13 @@ parser$add_argument('-pc', '--purity-cval', required = FALSE, type = 'integer',
                     default = 150, help = 'If two pass, purity segmentation parameter (cval)')
 parser$add_argument('-m', '--min-nhet', required = FALSE, type = 'integer',
                     default = 10, help = 'Min. number of heterozygous SNPs required for clustering [default %(default)s]')
+parser$add_argument('-ht', '--het-threshold', required=FALSE, type = 'double',
+                   default = 0.25, help = 'vaf threshold for heterzygous SNPs')
+parser$add_argument('-um', '--unmatched', required = FALSE, action = "store_true",
+                   default = FALSE, help = 'run unmatched sample')
 parser$add_argument('-pm', '--purity-min-nhet', required = FALSE, type = 'integer',
                     default = 10, help = 'If two pass, purity min. number of heterozygous SNPs (cval) [default %(default)s]')
-parser$add_argument('-n', '--snp-window-size', required = FALSE, type = 'integer', 
+parser$add_argument('-n', '--snp-window-size', required = FALSE, type = 'integer',
                     default = 250, help = 'Window size for heterozygous SNPs [default %(default)s]')
 parser$add_argument('-nd', '--normal-depth', required = FALSE, type = 'integer',
                     default = 25, help = 'Min. depth in normal to keep SNPs [default %(default)s]')
@@ -83,7 +87,7 @@ print_run_details = function(outfile,
                              flags = NULL,
                              ...) {
     params = c(...)
-    
+
     run_details = data.frame(
         'sample' = sample_id,
         'run_type' = run_type,
@@ -99,7 +103,7 @@ print_run_details = function(outfile,
         'seed' = args$seed,
         'flags' = flags,
         'input_file' = basename(args$counts_file))
-    
+
     if (length(params) > 0) {
         run_details = data.frame(run_details,
                                  'genome_doubled' = params$genome_doubled,
@@ -110,9 +114,9 @@ print_run_details = function(outfile,
                                  'ntai' = params$ntelomeric_ai,
                                  'hrd_loh' = params$hrd_loh)
     }
-    
+
     write(run_details, outfile)
-    
+
     run_details
 }
 
@@ -120,13 +124,13 @@ print_run_details = function(outfile,
 print_plots = function(outfile,
                        facets_output,
                        cval) {
-    
+
     plot_title = paste0(sample_id,
                         ' | cval=', cval,
                         ' | purity=', round(facets_output$purity, 2),
                         ' | ploidy=', round(facets_output$ploidy, 2),
                         ' | dipLogR=', round(facets_output$dipLogR, 2))
-    
+
     png(file = outfile, width = 6.5, height = 8, units = 'in', type = 'cairo-png', res = 300)
     suppressWarnings(
         egg::ggarrange(
@@ -155,11 +159,11 @@ print_segments = function(outfile,
 # Print IGV-style .seg file
 print_igv = function(outfile,
                      facets_output) {
-    
+
     ii = format_igv_seg(facets_output = facets_output,
                         sample_id = sample_id,
                         normalize = T)
-    
+
     write(ii, outfile)
 }
 
@@ -170,7 +174,7 @@ print_igv = function(outfile,
 # 3. Print run iformation, IGV-style seg file, segmentation data
 facets_iteration = function(name_prefix, ...) {
     params = list(...)
-    
+
     output = run_facets(read_counts = read_counts,
                         cval = params$cval,
                         dipLogR = params$dipLogR,
@@ -179,24 +183,25 @@ facets_iteration = function(name_prefix, ...) {
                         min_nhet = params$min_nhet,
                         genome = params$genome,
                         seed = params$seed,
-                        facets_lib_path = params$facets_lib_path, 
-                        facets2n_lib_path = params$facets2n_lib_path, 
-                        referencePileup= params$reference-snp-pileup, 
-                        referenceLoess = params$reference-loess-file, 
-                        MandUnormal = params$MandUnormal, 
-                        useMatchedX = params$useMatchedX)
-    
+                        facets_lib_path = params$facets_lib_path,
+                        facets2n_lib_path = params$facets2n_lib_path,
+                        referencePileup= params$reference-snp-pileup,
+                        referenceLoess = params$reference-loess-file,
+                        MandUnormal = params$MandUnormal,
+                        useMatchedX = params$useMatchedX,
+                        unmatched = params$unmatched)
+
     # No need to print the segmentation
-    # print_segments(outfile = paste0(name_prefix, '.cncf.txt'), 
+    # print_segments(outfile = paste0(name_prefix, '.cncf.txt'),
     #                facets_output = output)
-    
+
     print_igv(outfile = paste0(name_prefix, '.seg'),
               facets_output = output)
-    
+
     print_plots(outfile = paste0(name_prefix, '.png'),
                 facets_output = output,
                 cval = params$cval)
-    
+
     output
 }
 
@@ -234,13 +239,13 @@ if (!is.null(args$purity_cval)) {
                                      min_nhet = args$purity_min_nhet,
                                      genome = args$genome,
                                      seed = args$seed,
-                                     facets_lib_path = args$facets_lib_path, 
-                                     facets2n_lib_path = args$facets2n_lib_path, 
-                                     referencePileup= args$reference_snp_pileup, 
-                                     referenceLoess = args$reference_loess_file, 
-                                     MandUnormal = args$MandUnormal, 
-                                     useMatchedX = args$useMatchedX
-                                     )
+                                     facets_lib_path = args$facets_lib_path,
+                                     facets2n_lib_path = args$facets2n_lib_path,
+                                     referencePileup= args$reference_snp_pileup,
+                                     referenceLoess = args$reference_loess_file,
+                                     MandUnormal = args$MandUnormal,
+                                     useMatchedX = args$useMatchedX,
+                                     unmatched = args$unmatched)
 
     hisens_output = facets_iteration(name_prefix = paste0(name, '_hisens'),
                                      dipLogR = purity_output$dipLogR,
@@ -250,13 +255,14 @@ if (!is.null(args$purity_cval)) {
                                      min_nhet = args$min_nhet,
                                      genome = args$genome,
                                      seed = args$seed,
-                                     facets_lib_path = args$facets_lib_path, 
-                                     facets2n_lib_path = args$facets2n_lib_path, 
-                                     referencePileup= args$reference_snp_pileup, 
-                                     referenceLoess = args$reference_loess_file, 
-                                     MandUnormal = args$MandUnormal, 
-                                     useMatchedX = args$useMatchedX)
-    
+                                     facets_lib_path = args$facets_lib_path,
+                                     facets2n_lib_path = args$facets2n_lib_path,
+                                     referencePileup= args$reference_snp_pileup,
+                                     referenceLoess = args$reference_loess_file,
+                                     MandUnormal = args$MandUnormal,
+                                     useMatchedX = args$useMatchedX,
+                                     unmatched = args$unmatched)
+
     metadata = NULL
     if (args$everything) {
         metadata = c(
@@ -266,25 +272,25 @@ if (!is.null(args$purity_cval)) {
             map_dfr(list(purity_output, hisens_output), function(x) calculate_hrdloh(x$segs, x$ploidy)),
             map_dfr(list(purity_output, hisens_output), function(x) calculate_loh(x$segs, x$snps, args$genome))
         )
-        
-        qc = map_dfr(list(purity_output, hisens_output), function(x) check_fit(x, genome = args$genome)) %>% 
+
+        qc = map_dfr(list(purity_output, hisens_output), function(x) check_fit(x, genome = args$genome)) %>%
             add_column(sample = sample_id,
                        cval = c(args$purity_cval, args$cval), .before = 1)
         # Write QC
         write(qc, paste0(name, '.qc.txt'))
-        
+
         # Write gene level // use hisensitivity run
-        gene_level = gene_level_changes(hisens_output, args$genome) %>% 
+        gene_level = gene_level_changes(hisens_output, args$genome) %>%
             add_column(sample = sample_id, .before = 1)
         write(gene_level, paste0(name, '.gene_level.txt'))
-        
+
         # Write arm level // use purity run
-        arm_level = arm_level_changes(purity_output$segs, purity_output$ploidy, args$genome) %>% 
-            pluck('full_output') %>% 
+        arm_level = arm_level_changes(purity_output$segs, purity_output$ploidy, args$genome) %>%
+            pluck('full_output') %>%
             add_column(sample = sample_id, .before = 1)
         write(arm_level, paste0(name, '.arm_level.txt'))
     }
-    
+
     run_details = print_run_details(outfile = ifelse(args$legacy_output, '/dev/null', paste0(name, '.txt')),
                                     run_type = c('purity', 'hisens'),
                                     cval = c(args$purity_cval, args$cval),
@@ -292,10 +298,10 @@ if (!is.null(args$purity_cval)) {
                                     purity = c(purity_output$purity, hisens_output$purity),
                                     ploidy = c(purity_output$ploidy, hisens_output$ploidy),
                                     dipLogR = c(purity_output$dipLogR, hisens_output$dipLogR),
-                                    flags = unlist(map(list(purity_output$flags, hisens_output$flags), 
+                                    flags = unlist(map(list(purity_output$flags, hisens_output$flags),
                                                        function(x) paste0(x, collapse = '; '))),
                                     metadata)
-    
+
     if (args$legacy_output) {
         create_legacy_output(hisens_output, directory, sample_id, args$counts_file, 'hisens', run_details)
         create_legacy_output(purity_output, directory, sample_id, args$counts_file, 'purity', run_details)
@@ -304,7 +310,7 @@ if (!is.null(args$purity_cval)) {
         saveRDS(purity_output, paste0(name, '_purity.rds'))
         saveRDS(hisens_output, paste0(name, '_hisens.rds'))
     }
-    
+
 } else {
     name = paste0(directory, '/', sample_id)
 
@@ -317,7 +323,7 @@ if (!is.null(args$purity_cval)) {
                               genome = args$genome,
                               seed = args$seed,
                               facets_lib_path = args$facets_lib_path)
-    
+
     metadata = NULL
     if (args$everything) {
         metadata = c(
@@ -327,22 +333,22 @@ if (!is.null(args$purity_cval)) {
             calculate_hrdloh(output$segs, output$ploidy),
             calculate_loh(output$segs, output$snps, args$genome)
         )
-        
+
         # Write QC
         qc = check_fit(output, genome = args$genome)
         qc = c(sample = sample_id, cval = args$cval, qc)
         write(qc, paste0(name, '.qc.txt'))
-        
+
         # Write gene level
-        gene_level = gene_level_changes(output, args$genome) %>% 
+        gene_level = gene_level_changes(output, args$genome) %>%
             add_column(sample = sample_id, .before = 1)
         write(gene_level, paste0(name, '.gene_level.txt'))
-        
+
         # Write arm level
         arm_level = add_column(metadata$full_output, sample = sample_id, .before = 1)
         write(arm_level, paste0(name, '.arm_level.txt'))
     }
-    
+
     # Write run details/metadata
     run_details =
         print_run_details(outfile = ifelse(args$legacy_output, '/dev/null', paste0(name, '.txt')),
@@ -354,7 +360,7 @@ if (!is.null(args$purity_cval)) {
                           dipLogR = output$ploidy,
                           flags = paste0(output$flags, collapse = '; '),
                           metadata)
-    
+
     # Write RDS
     if (args$legacy_output) {
         create_legacy_output(output, directory, sample_id, args$counts_file, '', run_details)

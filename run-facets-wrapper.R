@@ -185,11 +185,12 @@ facets_iteration = function(name_prefix, ...) {
                         seed = params$seed,
                         facets_lib_path = params$facets_lib_path,
                         facets2n_lib_path = params$facets2n_lib_path,
-                        referencePileup= params$reference-snp-pileup,
-                        referenceLoess = params$reference-loess-file,
+                        referencePileup= params$referencePileup,
+                        referenceLoess = params$referenceLoess,
                         MandUnormal = params$MandUnormal,
                         useMatchedX = params$useMatchedX,
-                        unmatched = params$unmatched)
+                        unmatched = params$unmatched,
+                        het_thresh = params$het_thresh)
 
     # No need to print the segmentation
     # print_segments(outfile = paste0(name_prefix, '.cncf.txt'),
@@ -245,7 +246,8 @@ if (!is.null(args$purity_cval)) {
                                      referenceLoess = args$reference_loess_file,
                                      MandUnormal = args$MandUnormal,
                                      useMatchedX = args$useMatchedX,
-                                     unmatched = args$unmatched)
+                                     unmatched = args$unmatched,
+                                     het_thresh = args$het_threshold)
 
     hisens_output = facets_iteration(name_prefix = paste0(name, '_hisens'),
                                      dipLogR = purity_output$dipLogR,
@@ -261,7 +263,8 @@ if (!is.null(args$purity_cval)) {
                                      referenceLoess = args$reference_loess_file,
                                      MandUnormal = args$MandUnormal,
                                      useMatchedX = args$useMatchedX,
-                                     unmatched = args$unmatched)
+                                     unmatched = args$unmatched, 
+                                     het_thresh = args$het_threshold)
 
     metadata = NULL
     if (args$everything) {
@@ -322,6 +325,7 @@ if (!is.null(args$purity_cval)) {
                               min_nhet = args$min_nhet,
                               genome = args$genome,
                               seed = args$seed,
+                              het_thresh = args$het_threshold,
                               facets_lib_path = args$facets_lib_path)
 
     metadata = NULL

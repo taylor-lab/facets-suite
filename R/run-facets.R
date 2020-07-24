@@ -8,6 +8,7 @@
 #' @param ndepth Minimum depth in normal to retain SNP, see `facets` help.
 #' @param snp_nbhd Minimum basepair distance for SNPs, see `facets` help.
 #' @param min_nhet Minimum number of heterozygous SNPs on segment required for clustering, see `facets` help.
+#' @param het.thresh vaf threshold to call a SNP heterozygous
 #' @param genome Genome build.
 #' @param seed Seed value for random number generation, set to enable full reproducibility.
 #' @param facets_lib_path path to facets R library
@@ -55,7 +56,8 @@ run_facets = function(read_counts,
                       useMatchedX = FALSE,
                       referencePileup=NULL,
                       referenceLoess=NULL,
-                      unmatched = FALSE) {
+                      unmatched = FALSE,
+                      het_thresh=0.25) {
 
     if (facets_lib_path == '' & facets2n_lib_path == ''){
       stop('path to facets library is missing, must supply path to either facets or facets2n',  call. = FALSE)
@@ -83,30 +85,19 @@ run_facets = function(read_counts,
     fit = NULL
     if (facets2n_lib_path != ''){
       if (MandUnormal){
-        if (unmatched){
-          dat = facets2n::preProcSample(read_counts$rcmat, ndepth = ndepth, het.thresh = 0.3, snp.nbhd = snp_nbhd, cval = 25,
-                                        gbuild = genome, hetscale = TRUE, unmatched = TRUE, ndepthmax = 5000,
-                                        spanT = read_counts$spanT, spanA = read_counts$spanA, spanX = read_counts$spanX, MandUnormal = MandUnormal)
-        }else{
-          dat = facets2n::preProcSample(read_counts$rcmat, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
-                                        gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000,
-                                        spanT = read_counts$spanT, spanA = read_counts$spanA, spanX = read_counts$spanX, MandUnormal = MandUnormal)
-        }
+        dat = facets2n::preProcSample(read_counts$rcmat, ndepth = ndepth, het.thresh = het_thresh, snp.nbhd = snp_nbhd, cval = cval,
+                                      gbuild = genome, hetscale = TRUE, unmatched = unmatched, ndepthmax = 5000,
+                                      spanT = read_counts$spanT, spanA = read_counts$spanA, spanX = read_counts$spanX, MandUnormal = MandUnormal)
       }else{
-        if (unmatched){
-          dat = facets2n::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.3, snp.nbhd = snp_nbhd, cval = 25,
-                                        gbuild = genome, hetscale = TRUE, unmatched = TRUE, ndepthmax = 5000)
-        }else{
-          dat = facets2n::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
-                           gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000)
-        }
+          dat = facets2n::preProcSample(read_counts, ndepth = ndepth, het.thresh = het_thresh, snp.nbhd = snp_nbhd, cval = cval,
+                           gbuild = genome, hetscale = TRUE, unmatched = unmatched, ndepthmax = 5000)
       }
       out = facets2n::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
       fit = facets2n::emcncf(out, min.nhet = min_nhet)
       
     }else{
-      dat = facets::preProcSample(read_counts, ndepth = ndepth, het.thresh = 0.25, snp.nbhd = snp_nbhd, cval = 25,
-                                  gbuild = genome, hetscale = TRUE, unmatched = FALSE, ndepthmax = 5000)
+      dat = facets::preProcSample(read_counts, ndepth = ndepth, het.thresh = het_thresh, snp.nbhd = snp_nbhd, cval = cval,
+                                  gbuild = genome, hetscale = TRUE, unmatched = unmatched, ndepthmax = 5000)
       out = facets::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
       fit = facets::emcncf(out)
     }

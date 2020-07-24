@@ -19,7 +19,8 @@ run_facets(
   useMatchedX = FALSE,
   referencePileup = NULL,
   referenceLoess = NULL,
-  unmatched = FALSE
+  unmatched = FALSE,
+  het_thresh = 0.25
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ run_facets(
 \item{referenceLoess}{facets2n option: Filepath to an optional loess data, generated using the facets2n package, of one or more reference normals. The number of normals in this data should match that in the ReferencePileupFile, and should be in the same order.}
 
 \item{unmatched}{(logical) facets2n option: unmatched, use tumor for determination of heterzygous SNPs}
+
+\item{het.thresh}{vaf threshold to call a SNP heterozygous}
 }
 \value{
 A list object containing the following items. See \href{www.github.com/mskcc/facets}{FACETS documentation} for more details:

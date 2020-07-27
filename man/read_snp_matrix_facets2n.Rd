@@ -21,7 +21,8 @@ read_snp_matrix_facets2n(
   ReferenceLoessFile = NULL,
   MinOverlap = 0.9,
   useMatchedX = FALSE,
-  refX = FALSE
+  refX = FALSE,
+  unmatched = FALSE
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ read_snp_matrix_facets2n(
 \item{useMatchedX}{(logical) Is the matched normal to be used for ChrX normalization?}
 
 \item{refX}{(logical) Use sex matched reference normal for chrX normalization}
+
+\item{unmatched}{(logical) is the tumor being analyzed unmatched}
 
 \item{skip}{(character) Skip n number of lines in the input file.}
 }

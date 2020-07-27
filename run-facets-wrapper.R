@@ -223,7 +223,7 @@ if (dir.exists(directory)) {
 # Read SNP counts file
 message(paste('Reading', args$counts_file))
 if(args$facets2n_lib_path != ''){
-    read_counts = read_snp_matrix_facets2n(args$counts_file,MandUnormal= args$MandUnormal, ReferencePileupFile=args$reference_snp_pileup, ReferenceLoessFile=args$reference_loess_file, useMatchedX=args$useMatchedX, refX=args$refX)
+    read_counts = read_snp_matrix_facets2n(args$counts_file,MandUnormal= args$MandUnormal, ReferencePileupFile=args$reference_snp_pileup, ReferenceLoessFile=args$reference_loess_file, useMatchedX=args$useMatchedX, refX=args$refX, unmatched=args$unmatched)
 }else{
     read_counts = read_snp_matrix(args$counts_file)
 }

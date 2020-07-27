@@ -45,7 +45,7 @@ read_snp_matrix = function(input_file,
 
 read_snp_matrix_facets2n = function(filename, err.thresh=Inf, del.thresh=Inf, perl.pileup=FALSE,
                                     MandUnormal=FALSE, spanT=0.2, spanA=0.2, spanX=0.2, gbuild="hg19",
-                                    ReferencePileupFile=NULL, ReferenceLoessFile=NULL, MinOverlap=0.9, useMatchedX=FALSE, refX=FALSE){
+                                    ReferencePileupFile=NULL, ReferenceLoessFile=NULL, MinOverlap=0.9, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE){
     #' #' Read in the snp-pileup generated SNP read count matrix file for facets2n processing
     #' @importFrom utils read.csv
     #' @param filename counts file from snp-pileup
@@ -54,6 +54,7 @@ read_snp_matrix_facets2n = function(filename, err.thresh=Inf, del.thresh=Inf, pe
     #' @param del.thresh (numeric) Deletion threshold to be used to filter snp-pileup data frame.
     #' @param perl.pileup (logical) Is the pileup data generated using perl pileup tool?
     #' @param MandUnormal (logical) Is CNLR analysis to be peformed using unmatched reference normals?
+    #' @param unmatched (logical) is the tumor being analyzed unmatched
     #' @param spanT (numeric) Default span value to be used for loess normalization in tumor sample.
     #' @param spanA (numeric) Default span value to be used for loess normalization across autosomal chromosomes in the normal sample.
     #' @param spanX (numeric) Default span value to be used for loess normalization in Chr X in the normal sample.
@@ -69,8 +70,8 @@ read_snp_matrix_facets2n = function(filename, err.thresh=Inf, del.thresh=Inf, pe
     #' @importFrom pctGCdata getGCpct
     #' @export
     if (MandUnormal){
-        facets2n::readSnpMatrix(filename, MandUnormal = MandUnormal, ReferencePileupFile = ReferencePileupFile, ReferenceLoessFile = ReferenceLoessFile, useMatchedX = useMatchedX, refX = refX)
+        facets2n::readSnpMatrix(filename, MandUnormal = MandUnormal, ReferencePileupFile = ReferencePileupFile, ReferenceLoessFile = ReferenceLoessFile, useMatchedX = useMatchedX, refX = refX, unmatched=unmatched)
     }else{
-        facets2n::readSnpMatrix(filename, MandUnormal = MandUnormal)
+        facets2n::readSnpMatrix(filename, MandUnormal = MandUnormal, unmatched=unmatched)
     }
 }

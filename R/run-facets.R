@@ -18,6 +18,8 @@
 #' @param MandUnormal (logical) facets2n option: Is CNLR analysis to be peformed using unmatched reference normals?
 #' @param unmatched (logical) facets2n option: unmatched, use tumor for determination of heterzygous SNPs
 #' @param useMatchedX (logical) facets2n option: Force matched normal to be used for ChrX normalization?
+#' @param sampleid (character) optional, sample ID to use for transplant seg files
+#' @param outdir (character) optional, outdir for CBS cluster graphs
 #' @return A list object containing the following items. See \href{www.github.com/mskcc/facets}{FACETS documentation} for more details:
 #' \itemize{
 #'       \item{\code{snps}:} {SNPs used for copy-number segmentation, \code{het==1} for heterozygous loci.}
@@ -57,7 +59,10 @@ run_facets = function(read_counts,
                       referencePileup=NULL,
                       referenceLoess=NULL,
                       unmatched = FALSE,
-                      het_thresh=0.25) {
+                      transplant = FALSE,
+                      het_thresh=0.25,
+                      sample_id = NULL,
+                      outdir = NULL) {
 
     if (facets_lib_path == '' & facets2n_lib_path == ''){
       stop('path to facets library is missing, must supply path to either facets or facets2n',  call. = FALSE)
@@ -95,6 +100,10 @@ run_facets = function(read_counts,
       out = facets2n::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
       fit = facets2n::emcncf(out, min.nhet = min_nhet)
       
+      if(transplant){
+        seg.out = facets2n::segmentTransplant(seglist=dat,make.plots = TRUE, sname = sample_id, outdir = outdir)
+      }
+      
     }else{
       dat = facets::preProcSample(read_counts, ndepth = ndepth, het.thresh = het_thresh, snp.nbhd = snp_nbhd, cval = cval,
                                   gbuild = genome, hetscale = TRUE, unmatched = unmatched, ndepthmax = 5000)
@@ -107,9 +116,24 @@ run_facets = function(read_counts,
     fit$cncf = cbind(fit$cncf, cf = out$out$cf, tcn = out$out$tcn, lcn = out$out$lcn)
     fit$cncf$lcn[fit$cncf$tcn == 1] = 0
     fit$cncf$lcn.em[fit$cncf$tcn.em == 1] = 0
+    
 
+    if(transplant){
+      list(
+        snps = out$jointseg,
+        segs = fit$cncf,
+        purity = as.numeric(fit$purity),
+        ploidy = as.numeric(fit$ploidy),
+        dipLogR = out$dipLogR,
+        alBalLogR = out$alBalLogR,
+        flags = out$flags,
+        em_flags = fit$emflags,
+        loglik = fit$loglik,
+        segsTransplant = seg.out
+      )
+    }else{
     # Generate output
-    list(
+      list(
         snps = out$jointseg,
         segs = fit$cncf,
         purity = as.numeric(fit$purity),
@@ -119,7 +143,8 @@ run_facets = function(read_counts,
         flags = out$flags,
         em_flags = fit$emflags,
         loglik = fit$loglik
-    )
+      )
+    }
 }
 
 ## load facets output from .Rds file or legacy run of .Rdata file

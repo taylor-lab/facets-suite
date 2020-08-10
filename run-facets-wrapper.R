@@ -40,6 +40,8 @@ parser$add_argument('-ht', '--het-threshold', required=FALSE, type = 'double',
                    default = 0.25, help = 'vaf threshold for heterzygous SNPs')
 parser$add_argument('-um', '--unmatched', required = FALSE, action = "store_true",
                    default = FALSE, help = 'run unmatched sample')
+parser$add_argument('-t', '--transplant', required = FALSE, action = "store_true",
+                    default = FALSE, help = 'transplant mode, segment cnlr with CBS, skip allele specific analysis and plotting')
 parser$add_argument('-pm', '--purity-min-nhet', required = FALSE, type = 'integer',
                     default = 10, help = 'If two pass, purity min. number of heterozygous SNPs (cval) [default %(default)s]')
 parser$add_argument('-n', '--snp-window-size', required = FALSE, type = 'integer',
@@ -190,7 +192,10 @@ facets_iteration = function(name_prefix, ...) {
                         MandUnormal = params$MandUnormal,
                         useMatchedX = params$useMatchedX,
                         unmatched = params$unmatched,
-                        het_thresh = params$het_thresh)
+                        transplant = params$transplant,
+                        het_thresh = params$het_thresh,
+                        sample_id =params$sample_id,
+                        outdir = params$outdir)
 
     # No need to print the segmentation
     # print_segments(outfile = paste0(name_prefix, '.cncf.txt'),
@@ -247,7 +252,10 @@ if (!is.null(args$purity_cval)) {
                                      MandUnormal = args$MandUnormal,
                                      useMatchedX = args$useMatchedX,
                                      unmatched = args$unmatched,
-                                     het_thresh = args$het_threshold)
+                                     transplant = args$transplant,
+                                     het_thresh = args$het_threshold,
+                                     sample_id = sample_id,
+                                     outdir = directory)
 
     hisens_output = facets_iteration(name_prefix = paste0(name, '_hisens'),
                                      dipLogR = purity_output$dipLogR,
@@ -264,7 +272,10 @@ if (!is.null(args$purity_cval)) {
                                      MandUnormal = args$MandUnormal,
                                      useMatchedX = args$useMatchedX,
                                      unmatched = args$unmatched, 
-                                     het_thresh = args$het_threshold)
+                                     transplant = args$transplant,
+                                     het_thresh = args$het_threshold,
+                                     sample_id = sample_id,
+                                     outdir = directory)
 
     metadata = NULL
     if (args$everything) {
@@ -312,6 +323,9 @@ if (!is.null(args$purity_cval)) {
         # Write RDS
         saveRDS(purity_output, paste0(name, '_purity.rds'))
         saveRDS(hisens_output, paste0(name, '_hisens.rds'))
+    }
+    if(args$transplant){
+        write.table(hisens_output$segsTransplant,file = paste(name,"seg_file_with_pval.txt",sep='_'),sep='\t',row.names=F,col.names=T,quote=F)
     }
 
 } else {

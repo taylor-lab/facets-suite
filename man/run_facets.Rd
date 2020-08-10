@@ -20,7 +20,10 @@ run_facets(
   referencePileup = NULL,
   referenceLoess = NULL,
   unmatched = FALSE,
-  het_thresh = 0.25
+  transplant = FALSE,
+  het_thresh = 0.25,
+  sample_id = NULL,
+  outdir = NULL
 )
 }
 \arguments{
@@ -54,7 +57,11 @@ run_facets(
 
 \item{unmatched}{(logical) facets2n option: unmatched, use tumor for determination of heterzygous SNPs}
 
+\item{outdir}{(character) optional, outdir for CBS cluster graphs}
+
 \item{het.thresh}{vaf threshold to call a SNP heterozygous}
+
+\item{sampleid}{(character) optional, sample ID to use for transplant seg files}
 }
 \value{
 A list object containing the following items. See \href{www.github.com/mskcc/facets}{FACETS documentation} for more details:

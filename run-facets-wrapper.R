@@ -40,8 +40,8 @@ parser$add_argument('-ht', '--het-threshold', required=FALSE, type = 'double',
                    default = 0.25, help = 'vaf threshold for heterzygous SNPs')
 parser$add_argument('-um', '--unmatched', required = FALSE, action = "store_true",
                    default = FALSE, help = 'run unmatched sample')
-parser$add_argument('-t', '--transplant', required = FALSE, action = "store_true",
-                    default = FALSE, help = 'transplant mode, segment cnlr with CBS, skip allele specific analysis and plotting')
+parser$add_argument('-cbs', '--cbs', required = FALSE, action = "store_true",
+                    default = FALSE, help = 'segment cnlr with CBS, skip allele specific analysis and plotting')
 parser$add_argument('-pm', '--purity-min-nhet', required = FALSE, type = 'integer',
                     default = 10, help = 'If two pass, purity min. number of heterozygous SNPs (cval) [default %(default)s]')
 parser$add_argument('-n', '--snp-window-size', required = FALSE, type = 'integer',
@@ -152,6 +152,25 @@ print_plots = function(outfile,
     dev.off()
 }
 
+cbs_plot = function(outfile,
+                       facets_output) {
+    
+    plot_title = paste0(sample_id,' | coverage method with CBS')
+    
+    png(file = outfile, width = 8, height = 5, units = 'in', type = 'cairo-png', res = 300)
+    suppressWarnings(
+        egg::ggarrange(
+            plots = list(
+                cnlr_cbs_plot(facets_output,plotX = TRUE)
+            ),
+            ncol = 1,
+            nrow = 1,
+            heights = c(1),
+            top = plot_title)
+    )
+    dev.off()
+}
+
 # Print segmentation
 print_segments = function(outfile,
                           facets_output) {
@@ -192,7 +211,7 @@ facets_iteration = function(name_prefix, ...) {
                         MandUnormal = params$MandUnormal,
                         useMatchedX = params$useMatchedX,
                         unmatched = params$unmatched,
-                        transplant = params$transplant,
+                        cbs = params$cbs,
                         het_thresh = params$het_thresh,
                         sample_id =params$sample_id,
                         outdir = params$outdir)
@@ -200,13 +219,17 @@ facets_iteration = function(name_prefix, ...) {
     # No need to print the segmentation
     # print_segments(outfile = paste0(name_prefix, '.cncf.txt'),
     #                facets_output = output)
-
     print_igv(outfile = paste0(name_prefix, '.seg'),
               facets_output = output)
 
     print_plots(outfile = paste0(name_prefix, '.png'),
                 facets_output = output,
                 cval = params$cval)
+    
+    if (params$cbs){
+        cbs_plot(outfile = paste0(name_prefix, '_cbs.png'),
+                 facets_output = output)
+    }
 
     output
 }
@@ -252,7 +275,7 @@ if (!is.null(args$purity_cval)) {
                                      MandUnormal = args$MandUnormal,
                                      useMatchedX = args$useMatchedX,
                                      unmatched = args$unmatched,
-                                     transplant = args$transplant,
+                                     cbs = args$cbs,
                                      het_thresh = args$het_threshold,
                                      sample_id = sample_id,
                                      outdir = directory)
@@ -272,7 +295,7 @@ if (!is.null(args$purity_cval)) {
                                      MandUnormal = args$MandUnormal,
                                      useMatchedX = args$useMatchedX,
                                      unmatched = args$unmatched, 
-                                     transplant = args$transplant,
+                                     cbs = args$cbs,
                                      het_thresh = args$het_threshold,
                                      sample_id = sample_id,
                                      outdir = directory)
@@ -324,8 +347,8 @@ if (!is.null(args$purity_cval)) {
         saveRDS(purity_output, paste0(name, '_purity.rds'))
         saveRDS(hisens_output, paste0(name, '_hisens.rds'))
     }
-    if(args$transplant){
-        write.table(hisens_output$segsTransplant,file = paste(name,"seg_file_with_pval.txt",sep='_'),sep='\t',row.names=F,col.names=T,quote=F)
+    if(args$cbs){
+        write.table(hisens_output$segsCBS,file = paste(name,"seg_file_with_pval.txt",sep='_'),sep='\t',row.names=F,col.names=T,quote=F)
     }
 
 } else {

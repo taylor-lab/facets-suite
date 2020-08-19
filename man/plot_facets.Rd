@@ -7,6 +7,7 @@
 \alias{cf_plot}
 \alias{icn_plot}
 \alias{closeup_plot}
+\alias{cnlr_cbs_plot}
 \title{Plot FACETS output}
 \usage{
 cnlr_plot(
@@ -53,6 +54,17 @@ closeup_plot(
   plot_chroms = NULL,
   method = c("em", "cncf"),
   genome = c("hg19", "hg18", "hg38"),
+  return_object = FALSE
+)
+
+cnlr_cbs_plot(
+  facets_data,
+  colors = c("#0080FF", "#4CC4FF"),
+  plotX = TRUE,
+  genome = c("hg19", "hg18", "hg38"),
+  highlight_gene = NULL,
+  adjust_dipLogR = FALSE,
+  subset_snps = NULL,
   return_object = FALSE
 )
 }

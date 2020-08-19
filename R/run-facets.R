@@ -18,7 +18,7 @@
 #' @param MandUnormal (logical) facets2n option: Is CNLR analysis to be peformed using unmatched reference normals?
 #' @param unmatched (logical) facets2n option: unmatched, use tumor for determination of heterzygous SNPs
 #' @param useMatchedX (logical) facets2n option: Force matched normal to be used for ChrX normalization?
-#' @param sampleid (character) optional, sample ID to use for transplant seg files
+#' @param sampleid (character) optional, sample ID to use for CBS seg files
 #' @param outdir (character) optional, outdir for CBS cluster graphs
 #' @return A list object containing the following items. See \href{www.github.com/mskcc/facets}{FACETS documentation} for more details:
 #' \itemize{
@@ -59,7 +59,7 @@ run_facets = function(read_counts,
                       referencePileup=NULL,
                       referenceLoess=NULL,
                       unmatched = FALSE,
-                      transplant = FALSE,
+                      cbs = FALSE,
                       het_thresh=0.25,
                       sample_id = NULL,
                       outdir = NULL) {
@@ -100,8 +100,8 @@ run_facets = function(read_counts,
       out = facets2n::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
       fit = facets2n::emcncf(out, min.nhet = min_nhet)
       
-      if(transplant){
-        seg.out = facets2n::segmentTransplant(seglist=dat,make.plots = TRUE, sname = sample_id, outdir = outdir)
+      if(cbs){
+        seg.out = facets2n::segmentCBS(seglist=dat,make.plots = TRUE, sname = sample_id, outdir = outdir)
       }
       
     }else{
@@ -118,7 +118,7 @@ run_facets = function(read_counts,
     fit$cncf$lcn.em[fit$cncf$tcn.em == 1] = 0
     
 
-    if(transplant){
+    if(cbs){
       list(
         snps = out$jointseg,
         segs = fit$cncf,
@@ -129,7 +129,7 @@ run_facets = function(read_counts,
         flags = out$flags,
         em_flags = fit$emflags,
         loglik = fit$loglik,
-        segsTransplant = seg.out
+        segsCBS = seg.out
       )
     }else{
     # Generate output

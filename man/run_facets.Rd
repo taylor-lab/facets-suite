@@ -20,7 +20,7 @@ run_facets(
   referencePileup = NULL,
   referenceLoess = NULL,
   unmatched = FALSE,
-  transplant = FALSE,
+  cbs = FALSE,
   het_thresh = 0.25,
   sample_id = NULL,
   outdir = NULL
@@ -61,7 +61,7 @@ run_facets(
 
 \item{het.thresh}{vaf threshold to call a SNP heterozygous}
 
-\item{sampleid}{(character) optional, sample ID to use for transplant seg files}
+\item{sampleid}{(character) optional, sample ID to use for CBS seg files}
 }
 \value{
 A list object containing the following items. See \href{www.github.com/mskcc/facets}{FACETS documentation} for more details:

@@ -396,6 +396,99 @@ closeup_plot = function(facets_data,
     
 }
 
+#' @export
+#' @rdname plot_facets
+cnlr_cbs_plot = function(facets_data,
+                     colors = c('#0080FF', '#4CC4FF'),
+                     plotX = TRUE,
+                     genome = c('hg19', 'hg18', 'hg38'),
+                     highlight_gene = NULL,
+                     adjust_dipLogR = FALSE,
+                     subset_snps = NULL,
+                     return_object = FALSE) {
+    
+    genome = match.arg(genome, c('hg19', 'hg18', 'hg38'), several.ok = FALSE)
+    
+    snps = facets_data$snps
+    segs = facets_data$segsCBS
+    #dipLogR = facets_data$dipLogR
+    if (!plotX) {
+        snps = subset(snps, chrom < 23)
+        segs = subset(segs, chrom < 23)
+    }
+    
+    snps = get_cum_chr_maploc(snps, genome)
+    mid = snps$mid[names(snps$mid) %in% snps$snps$chrom]
+    centromeres = snps$centromeres
+    snps = snps$snps
+    
+    snps$cnlr_mean = rep(segs$cnlr.mean, segs$num.mark)
+    starts = cumsum(c(1, segs$num.mark))[seq_along(segs$num.mark)]
+    ends = cumsum(c(segs$num.mark))
+    my_starts = snps[starts, c('chr_maploc', 'cnlr_mean')]
+    my_ends = snps[ends, c('chr_maploc', 'cnlr_mean')]
+    
+    ymin = floor(min(segs$cnlr.mean, na.rm = T))
+    ymax = ceiling(max(segs$cnlr.mean, na.rm = T))
+    if (ymin > -2) ymin = -2
+    if (ymax < 2) ymax = 2
+    
+    if (adjust_dipLogR) {
+        snps$cnlr = snps$cnlr - dipLogR
+        my_starts$cnlr_median = my_starts$cnlr_mean - dipLogR
+        my_ends$cnlr_median = my_ends$cnlr_mean - dipLogR
+        dipLogR = Inf
+    }
+    
+    if (!is.null(subset_snps)) {
+        if (subset_snps == TRUE) {
+            snps = subset_snps(snps)
+        } else if (is.numeric(subset_snps)) {
+            snps = subset_snps(snps, subset_snps)
+        }
+    }
+    
+    pt_cols = colors[c(snps$chrom %% 2) + 1]
+    
+    # plot
+    cnlr = ggplot(snps) +
+        geom_point(aes(y = cnlr, x = chr_maploc), pch = 19, col = pt_cols, size = .4) +
+        scale_x_continuous(breaks = mid, labels = names(mid), expand = c(.01, 0)) +
+        scale_y_continuous(breaks = scales::pretty_breaks(), limits = c(ymin, ymax)) +
+        geom_hline(yintercept = min(segs$cl0.mean), color = 'sandybrown', size = .8) +
+        geom_segment(data = segs, aes(x = my_starts$chr_maploc, xend = my_ends$chr_maploc,
+                                      y = my_starts$cnlr_mean, yend = my_ends$cnlr_mean),
+                     col = 'red3', size = 1, lineend = 'butt') +
+        labs(x = NULL, y = 'Copy number log ratio') +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 0, size = 8, color = 'black'),
+              axis.text.y = element_text(angle = 0, size = 8, color = 'black'),
+              text = element_text(size = 10),
+              panel.grid.minor.x = element_line(colour = 'grey', size = .2),
+              panel.grid.major.x = element_line(colour = 'grey', size = 0),
+              plot.margin = unit(c(0, 1, 0, 0), 'lines'))
+    
+    # if highligthing gene
+    if (!is.null(highlight_gene)) {
+        if (is.character(highlight_gene)) {
+            highlight_gene = get_gene_position(highlight_gene)
+        }
+        snps$gene = FALSE
+        snps$gene[which(snps$chrom %in% highlight_gene$chrom &
+                            snps$chr_maploc >= highlight_gene$start &
+                            snps$chr_maploc <= highlight_gene$end)] = TRUE
+        cnlr = cnlr +
+            geom_vline(xintercept = highlight_gene$mid, color = 'palevioletred1') +
+            geom_point(data = filter(snps, gene == TRUE), aes(y = cnlr, x = chr_maploc), color = '#525252', size = .4) 
+    }
+    
+    if (return_object == TRUE) {
+        cnlr 
+    } else {
+        suppressMessages(print(cnlr))
+    }
+}
+
 # Helper functions ------------------------------------------------------------------------------------------------
 # Get positions of snps, running accros whole genome
 get_cum_chr_maploc = function(snps,
@@ -440,3 +533,4 @@ subset_snps = function(snps, by_factor = 5) {
     group_by(snps, chrom) %>% 
         sample_frac(1 / by_factor, replace = FALSE)
 }
+

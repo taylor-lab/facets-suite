@@ -22,7 +22,8 @@ read_snp_matrix_facets2n(
   MinOverlap = 0.9,
   useMatchedX = FALSE,
   refX = FALSE,
-  unmatched = FALSE
+  unmatched = FALSE,
+  donorCounts = FALSE
 )
 }
 \arguments{
@@ -55,6 +56,8 @@ read_snp_matrix_facets2n(
 \item{refX}{(logical) Use sex matched reference normal for chrX normalization}
 
 \item{unmatched}{(logical) is the tumor being analyzed unmatched}
+
+\item{donorCounts}{snp read count matrix for donor sample(s). Required columns: Chromosome Position Ref Alt and for each donor sample,i: RefDonoriR RefDonoriA RefDonoriE RefDonoriD RefDonoriDP}
 
 \item{skip}{(character) Skip n number of lines in the input file.}
 }

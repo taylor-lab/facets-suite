@@ -68,6 +68,9 @@ parser$add_argument('-MandU', '--MandUnormal', required = FALSE, action="store_t
                     default = FALSE, help = 'facets2n option: Is CNLR analysis to be peformed using unmatched reference normals?')
 parser$add_argument('-x', '--useMatchedX', required = FALSE, action="store_true",
                     default = FALSE, help = 'facets2n option: Force matched normal to be used for ChrX normalization')
+parser$add_argument('-df', '--donor-counts-file', required = FALSE, default=NULL,
+                    help = 'Merged, gzipped output from snp-pileup for baseline donor sample(s)')
+
 
 args = parser$parse_args()
 
@@ -157,7 +160,7 @@ cbs_plot = function(outfile,
     
     plot_title = paste0(sample_id,' | coverage method with CBS')
     
-    png(file = outfile, width = 8, height = 5, units = 'in', type = 'cairo-png', res = 300)
+    png(file = outfile, width = 8, height = 2, units = 'in', type = 'cairo-png', res = 300)
     suppressWarnings(
         egg::ggarrange(
             plots = list(
@@ -214,7 +217,8 @@ facets_iteration = function(name_prefix, ...) {
                         cbs = params$cbs,
                         het_thresh = params$het_thresh,
                         sample_id =params$sample_id,
-                        outdir = params$outdir)
+                        outdir = params$outdir,
+                        donor_counts = donor_counts)
 
     # No need to print the segmentation
     # print_segments(outfile = paste0(name_prefix, '.cncf.txt'),
@@ -252,6 +256,10 @@ if (dir.exists(directory)) {
 message(paste('Reading', args$counts_file))
 if(args$facets2n_lib_path != ''){
     read_counts = read_snp_matrix_facets2n(args$counts_file,MandUnormal= args$MandUnormal, ReferencePileupFile=args$reference_snp_pileup, ReferenceLoessFile=args$reference_loess_file, useMatchedX=args$useMatchedX, refX=args$refX, unmatched=args$unmatched)
+    if(!is.null(args$donor_counts_file)){
+        message(paste('Reading donor counts matrix', args$donor_counts_file))
+        donor_counts = read_snp_matrix_facets2n(args$donor_counts_file, donorCounts=TRUE)
+    }
 }else{
     read_counts = read_snp_matrix(args$counts_file)
 }

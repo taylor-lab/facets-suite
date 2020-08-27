@@ -23,7 +23,8 @@ run_facets(
   cbs = FALSE,
   het_thresh = 0.25,
   sample_id = NULL,
-  outdir = NULL
+  outdir = NULL,
+  donor_counts = NULL
 )
 }
 \arguments{

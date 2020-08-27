@@ -45,7 +45,7 @@ read_snp_matrix = function(input_file,
 
 read_snp_matrix_facets2n = function(filename, err.thresh=Inf, del.thresh=Inf, perl.pileup=FALSE,
                                     MandUnormal=FALSE, spanT=0.2, spanA=0.2, spanX=0.2, gbuild="hg19",
-                                    ReferencePileupFile=NULL, ReferenceLoessFile=NULL, MinOverlap=0.9, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE){
+                                    ReferencePileupFile=NULL, ReferenceLoessFile=NULL, MinOverlap=0.9, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE, donorCounts=FALSE){
     #' #' Read in the snp-pileup generated SNP read count matrix file for facets2n processing
     #' @importFrom utils read.csv
     #' @param filename counts file from snp-pileup
@@ -64,14 +64,15 @@ read_snp_matrix_facets2n = function(filename, err.thresh=Inf, del.thresh=Inf, pe
     #' @param MinOverlap (numeric) Mininum overlap fraction of loci between a tumor pileup and reference pileup data.
     #' @param useMatchedX (logical) Is the matched normal to be used for ChrX normalization?
     #' @param refX (logical) Use sex matched reference normal for chrX normalization
+    #' @param donorCounts snp read count matrix for donor sample(s). Required columns: Chromosome Position Ref Alt and for each donor sample,i: RefDonoriR RefDonoriA RefDonoriE RefDonoriD RefDonoriDP
     #' @return A dataframe of pileup depth values for Tumor and Matched Normal if MandUnormal is FALSE. Else, a list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
     #' @source \code{snp-pileup} is part of \href{www.github.com/mskcc/facets}{FACETS}.
     #' @import facets2n
     #' @importFrom pctGCdata getGCpct
     #' @export
     if (MandUnormal){
-        facets2n::readSnpMatrix(filename, MandUnormal = MandUnormal, ReferencePileupFile = ReferencePileupFile, ReferenceLoessFile = ReferenceLoessFile, useMatchedX = useMatchedX, refX = refX, unmatched=unmatched)
+        facets2n::readSnpMatrix(filename, MandUnormal = MandUnormal, ReferencePileupFile = ReferencePileupFile, ReferenceLoessFile = ReferenceLoessFile, useMatchedX = useMatchedX, refX = refX, unmatched=unmatched, donorCounts = donorCounts)
     }else{
-        facets2n::readSnpMatrix(filename, MandUnormal = MandUnormal, unmatched=unmatched)
+        facets2n::readSnpMatrix(filename, MandUnormal = MandUnormal, unmatched=unmatched, donorCounts = donorCounts)
     }
 }

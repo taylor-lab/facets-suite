@@ -62,7 +62,8 @@ run_facets = function(read_counts,
                       cbs = FALSE,
                       het_thresh=0.25,
                       sample_id = NULL,
-                      outdir = NULL) {
+                      outdir = NULL,
+                      donor_counts=NULL) {
 
     if (facets_lib_path == '' & facets2n_lib_path == ''){
       stop('path to facets library is missing, must supply path to either facets or facets2n',  call. = FALSE)
@@ -92,10 +93,10 @@ run_facets = function(read_counts,
       if (MandUnormal){
         dat = facets2n::preProcSample(read_counts$rcmat, ndepth = ndepth, het.thresh = het_thresh, snp.nbhd = snp_nbhd, cval = cval,
                                       gbuild = genome, hetscale = TRUE, unmatched = unmatched, ndepthmax = 5000,
-                                      spanT = read_counts$spanT, spanA = read_counts$spanA, spanX = read_counts$spanX, MandUnormal = MandUnormal)
+                                      spanT = read_counts$spanT, spanA = read_counts$spanA, spanX = read_counts$spanX, MandUnormal = MandUnormal, donorCounts=donor_counts)
       }else{
           dat = facets2n::preProcSample(read_counts, ndepth = ndepth, het.thresh = het_thresh, snp.nbhd = snp_nbhd, cval = cval,
-                           gbuild = genome, hetscale = TRUE, unmatched = unmatched, ndepthmax = 5000)
+                           gbuild = genome, hetscale = TRUE, unmatched = unmatched, ndepthmax = 5000, donorCounts=donor_counts)
       }
       out = facets2n::procSample(dat, cval = cval, min.nhet = min_nhet, dipLogR = dipLogR)
       fit = facets2n::emcncf(out, min.nhet = min_nhet)

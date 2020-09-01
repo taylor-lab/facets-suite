@@ -90,6 +90,7 @@ run_facets = function(read_counts,
     out = NULL
     fit = NULL
     if (facets2n_lib_path != ''){
+      setwd(outdir)
       if (MandUnormal){
         dat = facets2n::preProcSample(read_counts$rcmat, ndepth = ndepth, het.thresh = het_thresh, snp.nbhd = snp_nbhd, cval = cval,
                                       gbuild = genome, hetscale = TRUE, unmatched = unmatched, ndepthmax = 5000,
